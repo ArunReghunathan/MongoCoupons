@@ -72,6 +72,7 @@ class CouponManager(QuerySetManager):
 class Coupon(Document):
     value = fields.IntField(verbose_name="Value", required=True, help_text=_("Arbitrary coupon value"))
     code = fields.StringField(required=False, verbose_name="Code", unique=True, max_length=30, null=True)
+    product = fields.StringField(required=False, default="all", verbose_name="Product", max_length=30, null=True)
     max_discount = fields.IntField(required=False, verbose_name="Maximum discount", null=True)
     type = fields.StringField(verbose_name="Type", required=True, max_length=20, choices=COUPON_TYPES)
     user_limit = fields.IntField(verbose_name="User limit", default=1, min_value=0)
@@ -97,9 +98,15 @@ class Coupon(Document):
         if not self.code:
             self.code = Coupon.generate_code()
         super(Coupon, self).save(*args, **kwargs)
-    @property
+
     def is_expired(self):
         return self.valid_until is not None and self.valid_until < datetime.utcnow()
+
+    def is_wrong_product(self, product="all"):
+        if self.product in ["all", product, None]:
+            return False # correct coupon code
+        else:
+            return True # its a wrong product
 
     @property
     def is_redeemed(self):
@@ -155,10 +162,12 @@ class Coupon(Document):
             return False
         return True
 
-    def apply_coupon(self, amount, user=None):
+    def apply_coupon(self, amount, user=None, product="all"):
         '''amount: amount to be paid'''
+        if self.is_wrong_product(product):
+            raise ValidationError("Sorry, this coupon is not valid for product.")
 
-        if self.is_expired:
+        if self.is_expired():
             raise ValidationError("This code has been expired")
 
         if user:
@@ -208,3 +217,4 @@ class CouponUser(Document):
 
     def __str__(self):
         return str(self.user)
+
