@@ -165,7 +165,7 @@ class Coupon(Document):
     def apply_coupon(self, amount, user=None, product="all"):
         '''amount: amount to be paid'''
         if self.is_wrong_product(product):
-            raise ValidationError("Sorry, this coupon is not valid for product.")
+            raise ValidationError("Sorry, this coupon is not valid for this product.")
 
         if self.is_expired():
             raise ValidationError("This code has been expired")
