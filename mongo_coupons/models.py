@@ -161,6 +161,11 @@ class Coupon(Document):
         if self.usage_limit and coupon_user.redeemed_at and len(coupon_user.redeemed_at) >= self.usage_limit:
             return False
         return True
+    def check_user_limit(self):
+        coupon_users = CouponUser.objects.filter(coupon=self)
+        if self.user_limit and len(coupon_users) > self.user_limit:
+            return False
+        return True
 
     def apply_coupon(self, amount, user=None, product="all"):
         '''amount: amount to be paid'''
@@ -173,6 +178,9 @@ class Coupon(Document):
         if user:
             if not self.is_valid(user):
                 raise ValidationError("This code has already been used.")
+         
+        if not self.check_user_limit():
+            raise ValidationError("This code has already been used.")
 
         if self.type == 'percentage':
             discount = amount * self.value / 100
