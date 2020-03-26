@@ -106,6 +106,8 @@ class Coupon(Document):
         if self.product in ["all", product, None]:
             return False # correct coupon code
         else:
+            if product in self.product.split(","):
+                return False
             return True # its a wrong product
 
     @property
