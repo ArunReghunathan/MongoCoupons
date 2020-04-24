@@ -72,7 +72,7 @@ class CouponManager(QuerySetManager):
 class Coupon(Document):
     value = fields.IntField(verbose_name="Value", required=True, help_text=_("Arbitrary coupon value"))
     code = fields.StringField(required=False, verbose_name="Code", unique=True, max_length=30, null=True)
-    product = fields.StringField(required=False, default="all", verbose_name="Product", max_length=30, null=True)
+    product = fields.StringField(required=False, default="all", verbose_name="Product", max_length=1024, null=True)
     max_discount = fields.IntField(required=False, verbose_name="Maximum discount", null=True)
     type = fields.StringField(verbose_name="Type", required=True, max_length=20, choices=COUPON_TYPES)
     user_limit = fields.IntField(verbose_name="User limit", default=1, min_value=0)
