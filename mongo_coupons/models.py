@@ -82,6 +82,7 @@ class Coupon(Document):
                                        help_text="Leave empty for coupons that never expire")
     campaign = fields.ReferenceField('Campaign', verbose_name="Campaign", blank=True, null=True,
                                      related_name='coupons', dbref=True)
+    user_ids = fields.ListField(required=False, null=True, blank=True)
     kwargs = fields.DictField(required=False, null=True)
 
     objects = CouponManager()
@@ -110,6 +111,12 @@ class Coupon(Document):
                 return False
             return True # its a wrong product
 
+    def check_user_list(self, singleuser=None):
+        if self.user_ids:
+            if singleuser not in self.user_ids:
+                raise ValidationError("This coupon is not valid for you ")
+
+
     @property
     def is_redeemed(self):
         """ Returns true is a coupon is redeemed (completely for all users) otherwise returns false. """
@@ -135,6 +142,7 @@ class Coupon(Document):
             return prefix + code
 
     def redeem(self, user=None):
+        self.check_user_list(user)
         if user:
             user = User.objects.get(id=user)
         try:
@@ -180,6 +188,7 @@ class Coupon(Document):
         if user:
             if not self.is_valid(user):
                 raise ValidationError("This code has already been used.")
+            self.check_user_list(user)
          
         if not self.check_user_limit():
             raise ValidationError("This code has already been used.")
